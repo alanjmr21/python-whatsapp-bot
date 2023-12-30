@@ -78,7 +78,7 @@ def verify():
 
 
 @webhook_blueprint.route("/webhook", methods=["POST", "GET"])
-@signature_required
+# @signature_required
 def webhook():
     if request.method == "GET":
         return verify()
