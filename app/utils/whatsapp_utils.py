@@ -29,6 +29,9 @@ def get_text_message_input(recipient, text):
 #     # Return text in uppercase
 #     return response.upper()
 
+def parse_phone_num(phone_num_str):
+    phone_num = phone_num_str[:2] + phone_num_str[3:]
+    return phone_num
 
 def send_message(data):
     headers = {
@@ -88,8 +91,11 @@ def process_whatsapp_message(body):
     # OpenAI Integration
     response = generate_response(message_body, wa_id, name)
     response = process_text_for_whatsapp(response)
+    
+    phone_num = parse_phone_num(wa_id)
 
-    data = get_text_message_input(current_app.config["RECIPIENT_WAID"], response)
+    print("PHONE NUM: ", phone_num)
+    data = get_text_message_input(phone_num, response)
     send_message(data)
 
 
