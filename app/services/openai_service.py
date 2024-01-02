@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import time
 import logging
+from app.db.connection import create_connection
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -32,16 +33,36 @@ def create_assistant(file):
     return assistant
 
 
-# Use context manager to ensure the shelf file is closed properly
+# Use context manager
 def check_if_thread_exists(wa_id):
-    with shelve.open("threads_db") as threads_shelf:
-        return threads_shelf.get(wa_id, None)
+    db, connection = create_connection()
+    # Search query
+    search_query = "SELECT * FROM user_threads WHERE wa_id = %s"
+    data = (wa_id,)
+    db.execute(search_query, data)
+    # Fetch result
+    result = db.fetchone()
+    # Don't forget to close the cursor and connection when you're done
+    db.close()
+    connection.close()
+
+    if result:
+        return result[1]
+    
+    return None
 
 
 def store_thread(wa_id, thread_id):
-    with shelve.open("threads_db", writeback=True) as threads_shelf:
-        threads_shelf[wa_id] = thread_id
-
+    db, connection = create_connection()
+    # Insert query
+    insert_query = "INSERT INTO user_threads (wa_id, thread_id) VALUES (%s, %s)"
+    data = (wa_id, thread_id)
+    db.execute(insert_query, data)
+    # Commit the transaction
+    connection.commit()
+    # Don't forget to close the cursor and connection when you're done
+    db.close()
+    connection.close()
 
 def run_assistant(thread, name):
     # Retrieve the Assistant
